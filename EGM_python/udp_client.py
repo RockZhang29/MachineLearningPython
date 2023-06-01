@@ -8,7 +8,6 @@ bufsize = 4096  #定义缓冲大小
  
 addr = (host,port) # 元祖形式
 udpClient = socket.socket(socket.AF_INET,socket.SOCK_DGRAM) #创建客户端
- 
 while True:
     data = input('>>> ')
     if not data:

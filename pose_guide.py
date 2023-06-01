@@ -15,7 +15,7 @@ mp = abb.MotionProgram(egm_config = egm_config)
 mp.MoveAbsJ(j1,abb.v1000,abb.fine)
 mp.EGMRunJoint(10, 0.05, 0.05)
 
-client = abb.MotionProgramExecClient(base_url="http://127.0.0.1:6510")
+client = abb.MotionProgramExecClient(base_url='http://127.0.0.1:6510')
 lognum = client.execute_motion_program(mp, wait=False)
 
 t1 = time.perf_counter()

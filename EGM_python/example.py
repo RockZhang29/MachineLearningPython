@@ -47,7 +47,7 @@ print(mp.get_program_rapid())
 
 # Execute the motion program on the robot
 # Change base_url to the robot IP address
-client = abb.MotionProgramExecClient(base_url="http://127.0.0.1:80")
+client = abb.MotionProgramExecClient(base_url="http://127.0.0.1:6510")
 log_results = client.execute_motion_program(mp)
 
 # log_results.data is a numpy array
