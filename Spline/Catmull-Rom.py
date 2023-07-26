@@ -38,13 +38,13 @@ def catmull_rom_chain(points: tuple, num_points: int) -> list:
 
 if __name__ == "__main__":
     POINTS: tuple = ((-20,80,0),(0,100,0),(40,120,0),(30,75,0),(50,30,0),(65,70,0),(90,110,0),(120,70,0),(140,25,0),(165,25,0),(180,25,0))  # Red points
-    POINTS1: tuple = ((-20,80,0),(0,100,0),(40,120,0),(30,75,0),(45,50,0),(65,70,0),(90,110,0),(120,70,0),(140,25,0),(165,25,0),(180,25,0))  # Red points
+    # POINTS1: tuple = ((-20,80,0),(0,100,0),(40,120,0),(30,75,0),(45,50,0),(65,70,0),(90,110,0),(120,70,0),(140,25,0),(165,25,0),(180,25,0))  # Red points
     NUM_POINTS: int = 200  # Density of blue chain points between two red points
 
     chain_points: list = catmull_rom_chain(POINTS, NUM_POINTS)
     assert len(chain_points) == num_segments(POINTS) * NUM_POINTS  
-    chain_points1: list = catmull_rom_chain(POINTS1, NUM_POINTS)
-    assert len(chain_points1) == num_segments(POINTS1) * NUM_POINTS 
+    # chain_points1: list = catmull_rom_chain(POINTS1, NUM_POINTS)
+    # assert len(chain_points1) == num_segments(POINTS1) * NUM_POINTS 
 
     x1,y1,z1,x2,y2,z2 = [],[],[],[],[],[]
     for p1 in chain_points:
@@ -52,20 +52,32 @@ if __name__ == "__main__":
         y1.append(p1[1])
         z1.append(p1[2])
         
-    for p2 in chain_points1:
-        x2.append(p2[0])
-        y2.append(p2[1])
-        z2.append(p2[2])
+    # for p2 in chain_points1:
+    #     x2.append(p2[0])
+    #     y2.append(p2[1])
+    #     z2.append(p2[2])
     
     ax = plt.axes(projection='3d')
     ax.plot(x1,y1,z1,lw=1,c='b')
-    ax.plot(x2,y2,z2,lw=1,c='r')
+    # ax.plot(x2,y2,z2,lw=1,c='r')
     ax.set_xlabel('X',labelpad=5)
     ax.set_ylabel('Y',labelpad=5)
     ax.set_zlabel('Z',labelpad=5)
     ax.set_title('3D Cutmull-Rom Curve')
     plt.plot(*zip(*chain_points), c="blue")
     plt.plot(*zip(*POINTS), c="yellow", linestyle="none", marker="o")
-    plt.plot(*zip(*POINTS1), c="orange", linestyle="none", marker="x")
+    # plt.plot(*zip(*POINTS1), c="orange", linestyle="none", marker="x")
     plt.tight_layout()
     plt.show()
+    
+    dx = np.gradient(x1)
+    dy = np.gradient(y1)
+    dz = np.gradient(z1)
+    ds = np.sqrt(dx**2+dy**2+dz**2)
+    d2s = np.gradient(ds)
+    l = len(d2s)
+    t = np.linspace(0,l,l)
+    plt.plot(t,d2s)
+    plt.show()
+    
+    

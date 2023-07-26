@@ -5,6 +5,9 @@ from numpy.linalg import det
 
 from typing import Iterable
 
+D2R = np.pi/180
+R2D = 180/np.pi
+
 def is_real(x):
     return isinstance(x, float) or isinstance(x, int)
 
@@ -26,23 +29,34 @@ class QuadraticBezier(object):
         self.pts = np.asarray((p0, p1, p2))
         # print(f"pts = {p0,p1,p2}")
         ti = np.roots([np.linalg.norm(p2-p0)**2,3*np.dot(p2-p0, p0-p1),np.dot(3*p0-2*p1-p2, p0-p1),-np.linalg.norm(p0-p1)**2])
-        # print(f"ti={ti}")
+        a = np.linalg.norm(p2-p0)**2
+        b = 3*np.dot(p2-p0, p0-p1)
+        c = np.dot(3*p0-2*p1-p2, p0-p1)
+        d = -np.linalg.norm(p0-p1)**2
+        # print(f"para = {a,b,c,d}")
+        # print(f"ti_before={ti}")
         for i in ti:
+            # print(f"i in ti:{i}")
             if isinstance(i, complex) and i.imag < 0.01:
+                # print(f"i={i}")
                 i = i.real
                 if i > 0 and i < 1:
                     ti = i
                     break
         if(isinstance(ti, float) == False):
             raise Exception(f"Error compute t_i:{ti}")
-
+        
+        # print(f"ti_after={ti}")
         self.b1 = (p1-(1-ti)**2*p0-ti**2*p2)/(2*(1-ti)*ti)
+        # print(f"b1={self.b1}")
 
     def __call__(self, t: float):
         p0 = self.pts[0]
         p2 = self.pts[2]
         if is_real(t):
             # print(f"t={t}")
+            # p = (1-t)**2 * p0+2*(1-t)*t * self.b1 + t**2*p2
+            # print(f"path point {t*100} = {p}")
             return (1-t)**2 * p0+2*(1-t)*t * self.b1 + t**2*p2
         elif isinstance(t, Iterable):
             return np.asarray([self(i) for i in t])
@@ -101,19 +115,55 @@ class YukselC2Interpolation(object):
 
         return _blend(n-1, n)
 
+def Nd_Gradient_test(points):
+    # x,y,z,j4,j5,j6
+    j1,j2,j3,j4,j5,j6 = [],[],[],[],[],[]
+    for i in range(len(points)):
+        j1.append(points[i][0])
+        j2.append(points[i][1])
+        j3.append(points[i][2])
+        j4.append(points[i][3])
+        j5.append(points[i][4])
+        j6.append(points[i][5])
+    dx_dt = np.gradient(j4)
+    dy_dt = np.gradient(j5)
+    dz_dt = np.gradient(j6)
+    d2x_t = np.gradient(dx_dt)
+    d2y_t = np.gradient(dy_dt)
+    d2z_t = np.gradient(dz_dt)
+    ds = np.sqrt(dx_dt**2 + dy_dt**2 + dz_dt**2)
+    dx = dx_dt/ds
+    dy = dy_dt/ds
+    dz = dz_dt/ds
+    curvature_val = np.abs(d2y_t*dz_dt-d2z_t*dy_dt + d2z_t*dx_dt-d2x_t*dz_dt + d2x_t*dy_dt-d2y_t*dx_dt) / (dx_dt**2 + dy_dt**2 + dz_dt**2)**1.5
+
+    d1_dt = np.gradient(j1)
+    d2_dt = np.gradient(j2)
+    d3_dt = np.gradient(j3)
+    ds = np.sqrt(d1_dt**2 + d2_dt**2 + d3_dt**2)
+    d1 = d1_dt/ds
+    d2 = d2_dt/ds
+    d3 = d3_dt/ds
+    d1_2t = np.gradient(d1_dt)
+    d2_2t = np.gradient(d2_dt)
+    d3_2t = np.gradient(d3_dt)
+    acc_val = np.abs(d2_2t*d3_dt-d3_2t*d2_dt + d3_2t*d1_dt-d1_2t*d3_dt + d1_2t*d2_dt-d2_2t*d1_dt) / (d1_dt**2 + d2_dt**2 + d3_dt**2)**1.5
     
-def testNd():
-    x, y, z = np.array([[0, 0, 0], [-1, 0, 2], [2, 0, 1]])
-    interp = QuadraticBezier(x, y, z)
-    X = np.linspace(0, 1, 100)
-    Y = interp(X)
-    ax = plt.axes(projection='3d')
-    ax.plot(Y[:, 0],Y[:, 1],Y[:, 2],'b--')
+    ## 加速度
+    plt.plot(np.cumsum(ds),d1,'y-*',label='x')
+    plt.plot(np.cumsum(ds),d2,'k-*',label='y')
+    plt.plot(np.cumsum(ds),d3,'m-*',label='z')
+    plt.plot(np.cumsum(ds),dx,'r-*',label='joint4')
+    plt.plot(np.cumsum(ds),dy,'b-*',label='joint5')
+    plt.plot(np.cumsum(ds),dz,'g-*',label='joint6')
+    plt.title('6D Bezier Gradient')
+    plt.legend()
     plt.show()
     
 def testQ():
-    pts = np.array([[0,0,0,0,0,0], [4,5,2,0,90,75], [3,1,-1,42,-12,22], [4,0,2,-14,37,29]])
-    # plt.scatter(pts[:, 0], pts[:, 1], pts[:,2])
+    PI = np.pi
+    # pts = np.array([[0,0,0,0,0,0], [4,5,2,-PI/10,PI/15,PI/9], [3,1,-1,PI/5,PI/9,PI/17], [4,0,2,PI/6,PI/18,-PI/25]])
+    pts = np.array([[0,0,0],[4,2,5],[-1,3,5],[5,-4,2]])
     interp = YukselC2Interpolation(pts)
     X = np.linspace(0, np.pi/2, 100)
 
@@ -128,28 +178,43 @@ def testQ():
         j2.append(Y[:,4])
         j3.append(Y[:,5])
         
-    ax = plt.axes(projection='3d')
+    # ax = plt.axes(projection='3d')
     tx,ty,tz = [],[],[]
     for i in range(len(x)):
         for j in range(len(x[i])):
             tx.append(x[i][j])
             ty.append(y[i][j])
             tz.append(z[i][j])    
-    ax.plot(tx,ty,tz,'b-.')
-    plt.show()
+    # ax.plot(tx,ty,tz,'b-.')
+    # plt.show()
     
-    jx = plt.axes(projection='3d')
+    # jx = plt.axes(projection='3d')
     ja,jb,jc = [],[],[]
     for i in range(len(j1)):
         for j in range(len(j1[i])):
             ja.append(j1[i][j])
             jb.append(j2[i][j])
             jc.append(j3[i][j])    
-    jx.plot(ja,jb,jc,'r--')
-    plt.show()
+    # jx.plot(ja,jb,jc,'r--')
+    # plt.show()
 
+    # 将两个3d->一个6d
+    points = []
+    for i in range(len(tx)):
+        point = np.array([tx[i],ty[i],tz[i],ja[i],jb[i],jc[i]])
+        points.append(point)
+
+    # Nd_Gradient_test(points)
+
+def test_cubic_root():
+    a = np.float64(1)
+    b = np.float64(1)
+    c = np.float64(1)
+    d = np.float64(-3)
+    ti = np.roots([a,b,c,d])
     
-    
+    print(f"ti={ti}")
+
 if __name__ == "__main__":  
-    # testNd()
     testQ()
+    # test_cubic_root()
