@@ -17,10 +17,10 @@ while (t2 - t1) < 20:
     res, RobotState = egm.receive_from_robot(timeout=0.1)
     if res:
         if RobotState.rapid_running:
-            pos=RobotState.cartesian[0] # ndarray,[x,y,z]
+            pos = RobotState.cartesian[0] # ndarray,[x,y,z]
             tm=RobotState.robot_message.header.tm  # 读取时间戳
             count=count+1
-        print(f"egm 读取的位置：{pos},时间：{tm}")
+            print(f"egm 读取的位置：{pos},时间：{tm}")
     
 print(f"egm stram读取的点位数量: {count}")
 

@@ -29,8 +29,11 @@ class QuadraticBezier(object):
         self.pts = np.asarray((p0, p1, p2))
         # print(f"pts = {p0,p1,p2}")
         ti = np.roots([np.linalg.norm(p2-p0)**2,3*np.dot(p2-p0, p0-p1),np.dot(3*p0-2*p1-p2, p0-p1),-np.linalg.norm(p0-p1)**2])
+        # ti = np.roots([a,b,c,d])
         a = np.linalg.norm(p2-p0)**2
         b = 3*np.dot(p2-p0, p0-p1)
+        # print(f"p2-p0={p2-p0}")
+        # print(f"p0-p1={p0-p1}")
         c = np.dot(3*p0-2*p1-p2, p0-p1)
         d = -np.linalg.norm(p0-p1)**2
         # print(f"para = {a,b,c,d}")
@@ -46,7 +49,7 @@ class QuadraticBezier(object):
         if(isinstance(ti, float) == False):
             raise Exception(f"Error compute t_i:{ti}")
         
-        # print(f"ti_after={ti}")
+        #print(f"ti_after={ti}")
         self.b1 = (p1-(1-ti)**2*p0-ti**2*p2)/(2*(1-ti)*ti)
         # print(f"b1={self.b1}")
 
@@ -55,8 +58,8 @@ class QuadraticBezier(object):
         p2 = self.pts[2]
         if is_real(t):
             # print(f"t={t}")
-            # p = (1-t)**2 * p0+2*(1-t)*t * self.b1 + t**2*p2
-            # print(f"path point {t*100} = {p}")
+            p = (1-t)**2 * p0+2*(1-t)*t * self.b1 + t**2*p2
+            print(f"path point = {p}")
             return (1-t)**2 * p0+2*(1-t)*t * self.b1 + t**2*p2
         elif isinstance(t, Iterable):
             return np.asarray([self(i) for i in t])
@@ -99,6 +102,9 @@ class YukselC2Interpolation(object):
 
         def _blend(n1, n2):
             if is_real(theta):
+                # print(f"theta={theta}")
+                # if(theta == np.pi/4):
+                #     print(f"theta={theta},points={np.cos(theta)**2*self.scaled_call(n1, theta+np.pi/2) + np.sin(theta)**2 * self.scaled_call(n2, theta)}")
                 return np.cos(theta)**2*self.scaled_call(n1, theta+np.pi/2) + np.sin(theta)**2 * self.scaled_call(n2, theta)
             elif isinstance(theta, Iterable):
                 return np.asarray([self.blend(n, i) for i in theta])
@@ -153,17 +159,17 @@ def Nd_Gradient_test(points):
     plt.plot(np.cumsum(ds),d1,'y-*',label='x')
     plt.plot(np.cumsum(ds),d2,'k-*',label='y')
     plt.plot(np.cumsum(ds),d3,'m-*',label='z')
-    plt.plot(np.cumsum(ds),dx,'r-*',label='joint4')
-    plt.plot(np.cumsum(ds),dy,'b-*',label='joint5')
-    plt.plot(np.cumsum(ds),dz,'g-*',label='joint6')
+    plt.plot(np.cumsum(ds),dx,'r-*',label='joint1')
+    plt.plot(np.cumsum(ds),dy,'b-*',label='joint2')
+    plt.plot(np.cumsum(ds),dz,'g-*',label='joint3')
     plt.title('6D Bezier Gradient')
     plt.legend()
     plt.show()
     
 def testQ():
     PI = np.pi
-    # pts = np.array([[0,0,0,0,0,0], [4,5,2,-PI/10,PI/15,PI/9], [3,1,-1,PI/5,PI/9,PI/17], [4,0,2,PI/6,PI/18,-PI/25]])
-    pts = np.array([[0,0,0],[4,2,5],[-1,3,5],[5,-4,2]])
+    pts = np.array([[1,2,3,1,-2,1.2], [0,1,2,-1.2,2.3,0], [-2,2.5,-1.5,0.4,-1.5,3]])
+    # pts = np.array([[0,0,0],[4,2,5],[-1,3,5],[5,-4,2]])
     interp = YukselC2Interpolation(pts)
     X = np.linspace(0, np.pi/2, 100)
 
@@ -203,8 +209,8 @@ def testQ():
     for i in range(len(tx)):
         point = np.array([tx[i],ty[i],tz[i],ja[i],jb[i],jc[i]])
         points.append(point)
-
-    # Nd_Gradient_test(points)
+    # print(points)
+    Nd_Gradient_test(points)
 
 def test_cubic_root():
     a = np.float64(1)
@@ -215,6 +221,26 @@ def test_cubic_root():
     
     print(f"ti={ti}")
 
+def normal_test():
+    PI = np.pi
+    pts = np.array([[0,0,1],[1,3,2],[-2,-1,-1],[5,-4,0]])
+    # plt.scatter(pts[:, 0], pts[:, 1])
+    interp = YukselC2Interpolation(pts, circle_join=False)
+    X = np.linspace(0, np.pi/2, 100)
+    ax = plt.axes(projection='3d')
+    x,y,z=[],[],[]
+    for i in range(len(pts)-1):
+        Y = interp.blend(i, X)
+        ax.plot(Y[:,0], Y[:,1], Y[:,2])
+        x.append(Y[:,0])
+        y.append(Y[:,1])
+        z.append(Y[:,2])
+    # print(f"len(X)={len(x[0])}")
+    # print(f"x中间点:{Y[:,0]}")
+    ax.scatter(pts[:,0],pts[:,1],pts[:,2]) 
+    plt.show()
+
 if __name__ == "__main__":  
-    testQ()
+    # testQ()
     # test_cubic_root()
+    normal_test()
